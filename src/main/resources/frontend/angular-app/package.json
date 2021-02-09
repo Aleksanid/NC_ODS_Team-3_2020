@@ -4,13 +4,15 @@
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
-    "build": "ng build",
+    "build": "ng build --prod",
     "test": "ng test",
     "lint": "ng lint",
     "e2e": "ng e2e"
   },
   "private": true,
   "dependencies": {
+    "@angular/cli": "~11.0.5",
+    "@angular/compiler-cli": "~11.0.5",
     "@angular-material-components/datetime-picker": "^5.0.3",
     "@angular/animations": "~11.0.5",
     "@angular/cdk": "^11.0.3",
