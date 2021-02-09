@@ -26,6 +26,9 @@ public class DataSourceConfig {
     @Value("${connectionDB.driverClassName}")
     private String driverClassName;
 
+    @Value("${connectionDB.sslKey}")
+    private String sslKey;
+
     @Bean
     public JdbcTemplate getJdbcTemplate() {
         return new JdbcTemplate(getDataSource());
@@ -33,6 +36,10 @@ public class DataSourceConfig {
 
     @Bean
     public DataSource getDataSource() {
+        System.setProperty("javax.net.ssl.trustStorePassword",sslKey);
+        System.setProperty("javax.net.ssl.keyStorePassword",sslKey);
+
+
         DriverManagerDataSource dataSource = new DriverManagerDataSource();
         dataSource.setUrl(urlDb);
         dataSource.setUsername(login);
