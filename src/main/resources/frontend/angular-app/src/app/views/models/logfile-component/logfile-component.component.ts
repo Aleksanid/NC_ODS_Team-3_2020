@@ -4,7 +4,13 @@ import {LogFile} from '../../../entity/LogFile';
 import {RouteVariableNameConstants} from '../../../constants/route-variable-names-constants';
 import {Router} from '@angular/router';
 import {HttpClient, HttpParams} from '@angular/common/http';
-import {faEye, faSignInAlt, faStream, faTrashAlt} from '@fortawesome/free-solid-svg-icons';
+import {
+  faEye,
+  faPlus,
+  faSignInAlt,
+  faStream,
+  faTrashAlt
+} from '@fortawesome/free-solid-svg-icons';
 import {GlobalConstants} from '../../../constants/global-constants';
 import {Directory} from '../../../entity/Directory';
 import {FormGroup} from '@angular/forms';
@@ -19,6 +25,7 @@ export class LogfileComponentComponent implements OnInit {
   logFilePage: LogFilePage;
   localApi: string = 'api/logFile';
 
+  plusIcon = faPlus;
   logsIcon = faStream;
   proceedIcon = faSignInAlt;
   deleteIcon = faTrashAlt;
