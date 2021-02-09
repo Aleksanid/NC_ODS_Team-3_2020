@@ -100,26 +100,59 @@
             </resource>
         </resources>
         <plugins>
+
             <plugin>
-            <groupId>org.codehaus.mojo</groupId>
-            <artifactId>exec-maven-plugin</artifactId>
-            <version>3.0.0</version>
-            <executions>
-                <execution>
-                    <phase>validate</phase>
-                    <goals>
-                        <goal>exec</goal>
-                    </goals>
-                </execution>
-            </executions>
-            <configuration>
-                <executable>ng</executable>
-                <workingDirectory>src/main/resources/frontend/angular-app</workingDirectory>
-                <arguments>
-                    <argument>build</argument>
-                </arguments>
-            </configuration>
-        </plugin>
+                <groupId>com.github.eirslett</groupId>
+                <artifactId>frontend-maven-plugin</artifactId>
+                <configuration>
+                    <workingDirectory>src/main/resources/frontend/angular-app</workingDirectory>
+                    <installDirectory>src/main/resources/frontend/angular-app</installDirectory>
+                </configuration>
+                <executions>
+                    <!-- It will install nodejs and npm -->
+                    <execution>
+                        <id>install node and npm</id>
+                        <goals>
+                            <goal>install-node-and-npm</goal>
+                        </goals>
+                        <configuration>
+                            <nodeVersion>v12.0.0</nodeVersion>
+                            <npmVersion>3.10.10</npmVersion>
+                        </configuration>
+                    </execution>
+
+                    <!-- It will execute command "npm install" inside "/e2e-angular2" directory -->
+                    <execution>
+                        <id>npm install</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <configuration>
+                            <arguments>install</arguments>
+                        </configuration>
+                    </execution>
+                    <!-- It will execute command "npm build" inside "/e2e-angular2" directory
+                        to clean and create "/dist" directory -->
+                    <execution>
+                        <id>npm build</id>
+                        <goals>
+                            <goal>npm</goal>
+                        </goals>
+                        <configuration>
+                            <arguments>run build</arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+
+
+
+
+
+
+
+
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
