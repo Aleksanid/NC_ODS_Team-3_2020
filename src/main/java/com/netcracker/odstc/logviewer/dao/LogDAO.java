@@ -1,6 +1,7 @@
 package com.netcracker.odstc.logviewer.dao;
 
 import com.netcracker.odstc.logviewer.containers.RuleContainer;
+import com.netcracker.odstc.logviewer.containers.SortType;
 import com.netcracker.odstc.logviewer.containers.dto.LogDTO;
 import com.netcracker.odstc.logviewer.mapper.LogDTOMapper;
 import com.netcracker.odstc.logviewer.models.lists.LogLevel;
@@ -120,59 +121,22 @@ public class LogDAO extends EAVObjectDAO {
     }
 
     @Transactional
-    public Page<LogDTO> getLogsByFileId(BigInteger fileId, RuleContainer ruleContainer, Pageable pageable) {
-
-        MapSqlParameterSource parameterSourceCount = new MapSqlParameterSource()
-                .addValue("fileId", fileId)
-                .addValue("text", ruleContainer.getText())
-                .addValue("startDate", ruleContainer.getDat1())
-                .addValue("endDate", ruleContainer.getDat2())
-                .addValue("levels", convertEnumListToIntList(ruleContainer.getLevels()));
-
-        NamedParameterJdbcTemplate namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate);
-
-        MapSqlParameterSource parameterSourceForObject = new MapSqlParameterSource(parameterSourceCount.getValues())
-                .addValue("offset", pageable.getOffset())
-                .addValue("pageSize", pageable.getPageSize());
-
-        String query = ruleContainer.getSort() == 0 ? GET_LOGS_BY_FILE_AND_RULE_AND_DATE_SORTED_QUERY : GET_LOGS_BY_FILE_AND_RULE_AND_LEVEL_SORTED_QUERY;
-
-        List<LogDTO> content = namedParameterJdbcTemplate.query(query, parameterSourceForObject, new LogDTOMapper());
-
-        BigInteger approximateCount = namedParameterJdbcTemplate.queryForObject(GET_TOTAL_LOGS_APPROXIMATE_COUNT_BY_FILE_AND_RULE_QUERY, parameterSourceCount, BigInteger.class);
-        BigInteger totalRows;
-        boolean approximate;
-        if (BigInteger.valueOf(100000).compareTo(approximateCount) > 0) {
-            approximate = false;
-            totalRows = namedParameterJdbcTemplate.queryForObject(GET_TOTAL_LOGS_COUNT_BY_FILE_AND_RULE_QUERY, parameterSourceCount, BigInteger.class);
-        } else {
-            approximate = true;
-            totalRows = approximateCount;
-        }
-
-        if (totalRows == null) {
-            totalRows = BigInteger.ZERO;
-        }
-
-        return new ApproximateTotalPage<>(content, pageable, totalRows.longValue(), approximate);
-    }
-
-
-    @Transactional
     public Page<LogDTO> getLogsByDirectoryId(BigInteger directoryId, RuleContainer ruleContainer, Pageable pageable) {
-        NamedParameterJdbcTemplate namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate);
+
         MapSqlParameterSource parameterSourceCount = new MapSqlParameterSource()
                 .addValue("directoryId", directoryId)
-                .addValue("text", ruleContainer.getText())
-                .addValue("startDate", ruleContainer.getDat1())
-                .addValue("endDate", ruleContainer.getDat2())
+                .addValue("text", ruleContainer.getSearchText())
+                .addValue("startDate", ruleContainer.getStartDate())
+                .addValue("endDate", ruleContainer.getEndDate())
                 .addValue("levels", convertEnumListToIntList(ruleContainer.getLevels()));
+
+        NamedParameterJdbcTemplate namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate);
 
         MapSqlParameterSource parameterSourceForObject = new MapSqlParameterSource(parameterSourceCount.getValues())
                 .addValue("offset", pageable.getOffset())
                 .addValue("pageSize", pageable.getPageSize());
 
-        String query = ruleContainer.getSort() == 0 ? GET_LOGS_BY_DIRECTORY_AND_RULE_AND_DATE_SORTED_QUERY : GET_LOGS_BY_DIRECTORY_AND_RULE_AND_LEVEL_SORTED_QUERY;
+        String query = ruleContainer.getSortType() == SortType.BY_DATE ? GET_LOGS_BY_DIRECTORY_AND_RULE_AND_DATE_SORTED_QUERY : GET_LOGS_BY_DIRECTORY_AND_RULE_AND_LEVEL_SORTED_QUERY;
 
         List<LogDTO> content = namedParameterJdbcTemplate.query(query, parameterSourceForObject, new LogDTOMapper());
 
@@ -194,14 +158,50 @@ public class LogDAO extends EAVObjectDAO {
         return new ApproximateTotalPage<>(content, pageable, totalRows.longValue(), approximate);
     }
 
+    @Transactional
+    public Page<LogDTO> getLogsByFileId(BigInteger fileId, RuleContainer ruleContainer, Pageable pageable) {
+        NamedParameterJdbcTemplate namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate);
+        MapSqlParameterSource parameterSourceCount = new MapSqlParameterSource()
+                .addValue("fileId", fileId)
+                .addValue("text", ruleContainer.getSearchText())
+                .addValue("startDate", ruleContainer.getStartDate())
+                .addValue("endDate", ruleContainer.getEndDate())
+                .addValue("levels", convertEnumListToIntList(ruleContainer.getLevels()));
+
+        MapSqlParameterSource parameterSourceForObject = new MapSqlParameterSource(parameterSourceCount.getValues())
+                .addValue("offset", pageable.getOffset())
+                .addValue("pageSize", pageable.getPageSize());
+
+        String query = ruleContainer.getSortType() == SortType.BY_DATE ? GET_LOGS_BY_FILE_AND_RULE_AND_DATE_SORTED_QUERY : GET_LOGS_BY_FILE_AND_RULE_AND_LEVEL_SORTED_QUERY;
+
+        List<LogDTO> content = namedParameterJdbcTemplate.query(query, parameterSourceForObject, new LogDTOMapper());
+
+        BigInteger approximateCount = namedParameterJdbcTemplate.queryForObject(GET_TOTAL_LOGS_APPROXIMATE_COUNT_BY_FILE_AND_RULE_QUERY, parameterSourceCount, BigInteger.class);
+        BigInteger totalRows;
+        boolean approximate;
+        if (BigInteger.valueOf(100000).compareTo(approximateCount) > 0) {
+            approximate = false;
+            totalRows = namedParameterJdbcTemplate.queryForObject(GET_TOTAL_LOGS_COUNT_BY_FILE_AND_RULE_QUERY, parameterSourceCount, BigInteger.class);
+        } else {
+            approximate = true;
+            totalRows = approximateCount;
+        }
+
+        if (totalRows == null) {
+            totalRows = BigInteger.ZERO;
+        }
+
+        return new ApproximateTotalPage<>(content, pageable, totalRows.longValue(), approximate);
+    }
+
     public BigInteger getLogsCountByDirectory(BigInteger directoryId, RuleContainer ruleContainer) {
         NamedParameterJdbcTemplate namedParameterJdbcTemplate = new NamedParameterJdbcTemplate(jdbcTemplate);
 
         MapSqlParameterSource parameterSourceCount = new MapSqlParameterSource()
                 .addValue("directoryId", directoryId)
-                .addValue("text", ruleContainer.getText())
-                .addValue("startDate", ruleContainer.getDat1())
-                .addValue("endDate", ruleContainer.getDat2())
+                .addValue("text", ruleContainer.getSearchText())
+                .addValue("startDate", ruleContainer.getStartDate())
+                .addValue("endDate", ruleContainer.getEndDate())
                 .addValue("levels", convertEnumListToIntList(ruleContainer.getLevels()));
 
         return namedParameterJdbcTemplate.queryForObject(GET_TOTAL_LOGS_COUNT_BY_DIRECTORY_AND_RULE_QUERY, parameterSourceCount, BigInteger.class);
@@ -212,9 +212,9 @@ public class LogDAO extends EAVObjectDAO {
 
         MapSqlParameterSource parameterSourceCount = new MapSqlParameterSource()
                 .addValue("fileId", fileId)
-                .addValue("text", ruleContainer.getText())
-                .addValue("startDate", ruleContainer.getDat1())
-                .addValue("endDate", ruleContainer.getDat2())
+                .addValue("text", ruleContainer.getSearchText())
+                .addValue("startDate", ruleContainer.getStartDate())
+                .addValue("endDate", ruleContainer.getEndDate())
                 .addValue("levels", convertEnumListToIntList(ruleContainer.getLevels()));
 
         return namedParameterJdbcTemplate.queryForObject(GET_TOTAL_LOGS_APPROXIMATE_COUNT_BY_FILE_AND_RULE_QUERY, parameterSourceCount, BigInteger.class);
